@@ -1,9 +1,9 @@
 package io.github.qkeeper.todoapp
 
 import android.content.Context
-import android.util.Log
 import org.json.JSONArray
 import org.json.JSONException
+import timber.log.Timber
 import java.io.IOException
 
 class FileStorage(private val context: Context) {
@@ -15,23 +15,24 @@ class FileStorage(private val context: Context) {
 
     fun addTodoItem(todo: TodoItem) {
         _todoItems.add(todo);
-        Log.println(Log.INFO, "TODO", "Добавлена задача '${todo.text}'")
+        Timber.d("Добавлена задача '${todo.uid}'")
     }
 
     fun deleteTodoItem(uid: String) {
         val itemToRemove = _todoItems.find { it.uid == uid }
         if (itemToRemove != null) {
             _todoItems.remove(itemToRemove)
-            Log.println(Log.INFO, "TODO", "Удалена задача: '${itemToRemove.text}'")
-        } else Log.println(Log.INFO, "TODO", "Задача с uid '${uid}' не найдена")
+            Timber.d("Удалена задача '${itemToRemove.uid}'")
+
+        } else Timber.d("Задача '${uid}' не найдена для удаления")
     }
 
     fun updateTodoItem(updatedItem: TodoItem) {
         val index = _todoItems.indexOfFirst { it.uid == updatedItem.uid }
         if (index != -1) {
             _todoItems[index] = updatedItem;
-            Log.println(Log.INFO, "TODO", "Задача '${updatedItem.uid}' изменена")
-        } else Log.println(Log.INFO, "TODO", "Задача для обновления не найдена '${updatedItem.uid}'")
+            Timber.d("Задача '${updatedItem.uid}' изменена")
+        } else Timber.d("Задача '${updatedItem.uid}' не найдена для обновления")
     }
 
     fun getTodoItem(uid: String): TodoItem? {
@@ -46,7 +47,7 @@ class FileStorage(private val context: Context) {
                 outputStream.write(jsonArray.toString().toByteArray())
             }
         } catch (e: IOException) {
-            Log.println(Log.ERROR, "FileStorage", e.printStackTrace().toString())
+            Timber.d( e.printStackTrace().toString())
         }
     }
 
@@ -66,7 +67,7 @@ class FileStorage(private val context: Context) {
         } catch (e: IOException) {
             return emptyList()
         } catch (e: JSONException) {
-            Log.println(Log.ERROR, "FileStorage", e.printStackTrace().toString())
+            Timber.d(e.printStackTrace().toString())
             return emptyList()
         }
         return _todoItems;

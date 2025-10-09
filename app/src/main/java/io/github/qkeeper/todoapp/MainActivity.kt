@@ -12,36 +12,45 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.qkeeper.todoapp.ui.theme.TodoAppTheme
+import timber.log.Timber
 
 class MainActivity : ComponentActivity() {
+    // Используем `lazy`, чтобы экземпляр был создан только при первом обращении к нему.
+    private val fileStorage by lazy { FileStorage(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Timber.plant(Timber.DebugTree())
+
+        Timber.d("Custom Application class initialized!")
+
         enableEdgeToEdge()
-        setContent {
-            TodoAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
+//        setContent {
+//            TodoAppTheme {
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//                    Greeting(
+//                        name = "Android",
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
+//                }
+//            }
+//        }
+
+        // FileStorage test
+        Timber.d("onCreate")
+        fileStorage.load();
+        fileStorage.addTodoItem(TodoItem(text = "Test item"));
+        Timber.d(fileStorage.todoItems.toString());
+        fileStorage.save();
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun TodoList(
+    modifier: Modifier = Modifier,
+    items: List<TodoItem>,
+    onAddItem: () -> Unit
+) {
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TodoAppTheme {
-        Greeting("Android")
-    }
 }
