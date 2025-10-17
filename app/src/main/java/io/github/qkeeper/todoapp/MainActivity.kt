@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.qkeeper.todoapp.ui.theme.TodoAppTheme
 import timber.log.Timber
+import java.time.LocalDateTime
 
 class MainActivity : ComponentActivity() {
     // Используем `lazy`, чтобы экземпляр был создан только при первом обращении к нему.
@@ -36,21 +37,5 @@ class MainActivity : ComponentActivity() {
 //                }
 //            }
 //        }
-
-        // FileStorage test
-        Timber.d("onCreate")
-        fileStorage.load();
-        fileStorage.addTodoItem(TodoItem(text = "Test item"));
-        Timber.d(fileStorage.todoItems.toString());
-        fileStorage.save();
     }
-}
-
-@Composable
-fun TodoList(
-    modifier: Modifier = Modifier,
-    items: List<TodoItem>,
-    onAddItem: () -> Unit
-) {
-
 }

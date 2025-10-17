@@ -1,5 +1,6 @@
 package io.github.qkeeper.todoapp
 
+import androidx.compose.ui.graphics.Color
 import org.json.JSONObject
 import java.time.Instant
 import java.time.LocalDateTime
@@ -13,7 +14,7 @@ val TodoItem.json: JSONObject
         json.put("text", text)
         if (importance != Importance.DEFAULT)
             json.put("importance", importance.name)
-        if (color != 0xFFFFFFFF)
+        if (color != Color.White)
             json.put("color", color)
         deadline?.let {
             json.put("deadline", it.toEpochSecond(ZoneOffset.UTC))
@@ -34,7 +35,7 @@ fun TodoItem.Companion.parse(json: JSONObject): TodoItem? {
         else null
         val isDone = json.getBoolean("isDone")
 
-        TodoItem(uid, text, importance, color, deadline, isDone)
+        TodoItem(uid, text, importance, Color(color), deadline, isDone)
     } catch (e: Exception) {
         null
     }
