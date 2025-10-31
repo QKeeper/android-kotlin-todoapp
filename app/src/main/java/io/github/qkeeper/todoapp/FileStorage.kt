@@ -35,6 +35,19 @@ class FileStorage(private val context: Context) {
         } else Timber.d("Задача '${updatedItem.uid}' не найдена для обновления")
     }
 
+    fun addOrUpdate(todoItem: TodoItem) {
+        val index = _todoItems.indexOfFirst { it.uid == todoItem.uid }
+
+        if (index != -1) {
+            _todoItems[index] = todoItem;
+            // Timber.d("Задача '${todoItem.uid}' обновлена")
+            Timber.d("TODO JSON: ${todoItem.json}")
+        } else {
+            _todoItems.add(todoItem);
+            Timber.d("Добавлена новая задача '${todoItem.uid}'")
+        }
+    }
+
     fun getTodoItem(uid: String): TodoItem? {
         return _todoItems.find { it.uid == uid }
     }

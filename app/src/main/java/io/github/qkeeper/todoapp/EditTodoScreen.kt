@@ -54,23 +54,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import timber.log.Timber
 
 @Composable
 fun EditTodoScreen(
     item: TodoItem,
+    isNew: Boolean,
     onSave: (TodoItem) -> Unit,
     onNavigateBack: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var text by remember { mutableStateOf(item.text) }
-    var importance by remember { mutableStateOf(item.importance) }
-    var deadline by remember { mutableStateOf(item.deadline) }
+    var text by rememberSaveable { mutableStateOf(item.text) }
+    var importance by rememberSaveable { mutableStateOf(item.importance) }
+    var deadline by rememberSaveable { mutableStateOf(item.deadline) }
     var color by remember { mutableStateOf(item.color) }
 
     val isSaveEnabled = text.isNotBlank()
@@ -85,14 +88,15 @@ fun EditTodoScreen(
                     val updatedItem = item.copy(
                         text = text,
                         importance = importance,
-                        deadline = deadline
+                        deadline = deadline,
+                        color = color,
                     )
                     onSave(updatedItem)
                 }
             )
         }
     ) {
-        innerPadding ->
+            innerPadding ->
 
         val scrollState = rememberScrollState()
 
@@ -104,7 +108,13 @@ fun EditTodoScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardColors(
+                    containerColor = color,
+                    disabledContainerColor = Color.Black,
+                    contentColor = Color.Black,
+                    disabledContentColor = Color.Black
+                )
             ) {
                 TextField(
                     value = text,
@@ -116,11 +126,9 @@ fun EditTodoScreen(
                         .fillMaxWidth()
                         .padding(8.dp),
                     colors = TextFieldDefaults.colors(
-                        // Убираем фон у самого поля ввода, т.к. фон задает Card
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
-                        // Убираем линию-индикатор
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent,
@@ -156,7 +164,9 @@ fun EditTodoScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) // <-- Добавим еще один разделитель
 
-                DeleteButton(onDelete = onDelete)
+                if (!isNew) {
+                    DeleteButton(onDelete = onDelete)
+                }
             }
         }
     }
@@ -430,7 +440,8 @@ private fun EditTodoScreenPreview() {
             item = sampleTodo,
             onSave = {},
             onNavigateBack = {},
-            onDelete = {}
+            onDelete = {},
+            isNew = false
         )
     }
 }
