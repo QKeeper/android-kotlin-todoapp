@@ -14,18 +14,18 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun TodoListScreen(
-    storage: FileStorage,
+    todos: List<TodoItem>,
     onAddNewTodo: () -> Unit,
-    onTodoClick: (String) -> Unit
+    onTodoClick: (String) -> Unit,
+    onDelete: (String) -> Unit
 ) {
-    val todos = storage.todoItems
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
@@ -37,7 +37,7 @@ fun TodoListScreen(
         LazyColumn (
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 8.dp) // Добавим отступы по бокам для всего списка
+                .padding(horizontal = 8.dp)
         ) {
             items(
                 items = todos,
@@ -45,20 +45,21 @@ fun TodoListScreen(
             ) { todoItem ->
                 TodoListItem(
                     item = todoItem,
-                    onClick = { onTodoClick(todoItem.uid) }
+                    onClick = { onTodoClick(todoItem.uid) },
+                    onDelete = {
+                        onDelete(todoItem.uid)
+                    }
                 )
             }
         }
     }
 }
 
-/**
- * Composable-функция для отображения одного элемента в списке дел.
- */
 @Composable
 fun TodoListItem(
     item: TodoItem,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -77,5 +78,8 @@ fun TodoListItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         )
+        TextButton(onClick = onDelete) {
+            Text("Delete")
+        }
     }
 }

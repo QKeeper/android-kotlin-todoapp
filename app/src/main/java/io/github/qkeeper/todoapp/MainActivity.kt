@@ -4,59 +4,53 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import io.github.qkeeper.todoapp.AppDestinations
 import io.github.qkeeper.todoapp.ui.theme.TodoAppTheme
 import timber.log.Timber
-import java.time.LocalDateTime
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 class MainActivity : ComponentActivity() {
-    // Используем `lazy`, чтобы экземпляр был создан только при первом обращении к нему.
     private val fileStorage by lazy { FileStorage(this) }
+    private val viewModel: TodoViewModel by viewModels { TodoViewModelFactory(fileStorage) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        fileStorage.load()
-
         Timber.plant(Timber.DebugTree())
-        Timber.d("Custom Application class initialized!")
-        Timber.d("${fileStorage.todoItems[0]}")
 
         enableEdgeToEdge()
         setContent {
             TodoAppTheme {
-                TodoApp(fileStorage)
+                TodoApp(viewModel)
             }
         }
     }
 }
 
 @Composable
-private fun TodoApp(fileStorage: FileStorage) {
+private fun TodoApp(viewModel: TodoViewModel) {
     val navController = rememberNavController()
+    val todoItems by viewModel.todoItems.collectAsState()
 
     NavHost(navController = navController, startDestination = AppDestinations.TODO_LIST) {
         composable(AppDestinations.TODO_LIST) {
             TodoListScreen(
-                storage = fileStorage,
+                todos = todoItems,
                 onAddNewTodo = {
                     navController.navigate(AppDestinations.EDIT_TODO)
                 },
                 onTodoClick = { todoId ->
                     navController.navigate("${AppDestinations.EDIT_TODO}?${AppDestinations.TODO_ID_ARG}=${todoId}")
+                },
+                onDelete = { todoId ->
+                    viewModel.deleteTodoItem(todoId)
                 }
             )
         }
@@ -69,24 +63,22 @@ private fun TodoApp(fileStorage: FileStorage) {
             })
         ) { backStateEntry ->
             val todoId = backStateEntry.arguments?.getString(AppDestinations.TODO_ID_ARG)
-            val todoItem = todoId.let { id ->
-                fileStorage.todoItems.find { it.uid == id }
+            val todoItem = todoId?.let { id ->
+                viewModel.getTodoItem(id)
             } ?: TodoItem()
 
             EditTodoScreen(
                 item = todoItem,
                 isNew = todoId == null,
                 onSave = { updatedItem ->
-                    fileStorage.addOrUpdate(updatedItem)
-                    fileStorage.save()
+                    viewModel.addOrUpdate(updatedItem)
                     navController.popBackStack()
                 },
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onDelete = {
-                    fileStorage.deleteTodoItem(todoItem.uid)
-                    fileStorage.save()
+                    viewModel.deleteTodoItem(todoItem.uid)
                     navController.popBackStack()
                 }
             )
