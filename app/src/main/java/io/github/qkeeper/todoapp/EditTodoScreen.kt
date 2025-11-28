@@ -179,20 +179,17 @@ fun ImportanceSelector(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    // Используем Box, чтобы DropdownMenu позиционировалось относительно него
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { isMenuExpanded = true }
-            .padding(12.dp) // Добавим отступы, чтобы было похоже на другие строки
+            .padding(12.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Важность",
-                // Weight заставит этот Text занять все доступное место,
-                // отодвинув выпадающий список вправо
                 modifier = Modifier.weight(1f)
             )
             Text(
@@ -204,11 +201,10 @@ fun ImportanceSelector(
             )
         }
 
-        // Выпадающее меню теперь привязано к Box
         DropdownMenu(
             expanded = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
-            modifier = Modifier.fillMaxWidth(0.5f) // Меню будет занимать половину ширины
+            modifier = Modifier.fillMaxWidth(0.5f)
         ) {
             DropdownMenuItem(
                 text = { Text("Низкая") },
@@ -243,10 +239,8 @@ fun DeadlineSelector(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Если нужно показать календарь, делаем это
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            // Устанавливаем в календаре текущую выбранную дату, если она есть
             initialSelectedDateMillis = deadline?.toEpochSecond(ZoneOffset.UTC)?.times(1000)
         )
         DatePickerDialog(
@@ -283,7 +277,6 @@ fun DeadlineSelector(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text("Сделать до")
-            // Если дедлайн задан, показываем его
             deadline?.let {
                 val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
                 Text(
@@ -297,13 +290,10 @@ fun DeadlineSelector(
             checked = deadline != null,
             onCheckedChange = { isChecked ->
                 if (isChecked) {
-                    // Если включили, но даты еще нет - показываем календарь
-                    // Если дата уже была, просто оставляем ее
                     if (deadline == null) {
                         showDatePicker = true
                     }
                 } else {
-                    // Если выключили - сбрасываем дедлайн
                     onDeadlineChange(null)
                 }
             }
@@ -344,7 +334,7 @@ fun EditTodoTopAppBar(
     onSave: () -> Unit
 ) {
     TopAppBar(
-        title = { /* Мы оставляем заголовок пустым */ },
+        title = { },
         navigationIcon = {
             IconButton(onClick = onNavigateBack) {
                 Icon(
@@ -370,11 +360,12 @@ fun ColorSelector(
     onColorChange: (Color) -> Unit
 ) {
     val predefinedColors = listOf(
+        Color(0xFFFFFFFF), // Белый
         Color(0xFFFF7675), // Красный
         Color(0xFFFAB1A0), // Оранжевый
         Color(0xFFFFEAA7), // Желтый
         Color(0xFF55EFC4), // Зеленый
-        Color(0xFF81ECEC)  // Синий
+        Color(0xFF81ECEC), // Синий
     )
 
     Row(
