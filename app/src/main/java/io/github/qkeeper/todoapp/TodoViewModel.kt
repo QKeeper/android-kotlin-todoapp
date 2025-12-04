@@ -1,49 +1,73 @@
+// TodoViewModel.kt
 package io.github.qkeeper.todoapp
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.viewModelScope
+import io.github.qkeeper.todoapp.data.TodoItemsRepository
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
-class TodoViewModel(private val fileStorage: FileStorage) : ViewModel() {
+class TodoViewModel(
+    private val repository: TodoItemsRepository
+) : ViewModel() {
+    val todoItems: StateFlow<List<TodoItem>> = repository.itemsFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    private val _todoItems = MutableStateFlow<List<TodoItem>>(emptyList())
-    val todoItems = _todoItems.asStateFlow()
+    private val _errorEvents = MutableSharedFlow<String>()
+    val errorEvents = _errorEvents.asSharedFlow()
+
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Timber.e(throwable, "ViewModel Coroutine Error")
+        viewModelScope.launch {
+            _errorEvents.emit("Ошибка: ${throwable.localizedMessage}")
+        }
+    }
 
     init {
-        _todoItems.value = fileStorage.load()
+        loadData()
+    }
+
+    private fun loadData() {
+        viewModelScope.launch(exceptionHandler) {
+            repository.refreshData()
+        }
     }
 
     fun deleteTodoItem(uid: String) {
-        val newList = _todoItems.value.filter { it.uid != uid }
-        _todoItems.value = newList
-        fileStorage.save(newList)
+        viewModelScope.launch(exceptionHandler) {
+            repository.deleteItem(uid)
+        }
     }
 
     fun addOrUpdate(todoItem: TodoItem) {
-        val currentList = _todoItems.value
-        val index = currentList.indexOfFirst { it.uid == todoItem.uid }
-
-        val newList = if (index != -1) {
-            currentList.toMutableList().apply { this[index] = todoItem }
-        } else {
-            currentList + todoItem
+        viewModelScope.launch(exceptionHandler) {
+            repository.addItem(todoItem)
         }
-
-        _todoItems.value = newList
-        fileStorage.save(newList)
     }
 
     fun getTodoItem(uid: String): TodoItem? {
-        return _todoItems.value.find { it.uid == uid }
+        return repository.getItem(uid)
     }
 }
 
-class TodoViewModelFactory(private val fileStorage: FileStorage) : ViewModelProvider.Factory {
+class TodoViewModelFactory(
+    private val repository: TodoItemsRepository
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TodoViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TodoViewModel(fileStorage) as T
+            return TodoViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

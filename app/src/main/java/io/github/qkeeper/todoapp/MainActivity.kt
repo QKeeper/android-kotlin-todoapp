@@ -13,18 +13,25 @@ import androidx.navigation.navArgument
 import io.github.qkeeper.todoapp.ui.theme.TodoAppTheme
 import timber.log.Timber
 import androidx.activity.viewModels
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import io.github.qkeeper.todoapp.data.local.FileStorage
+import io.github.qkeeper.todoapp.data.TodoItemsRepository
+import io.github.qkeeper.todoapp.data.remote.NetworkDataSource
 
 class MainActivity : ComponentActivity() {
-    private val fileStorage by lazy { FileStorage(this) }
-    private val viewModel: TodoViewModel by viewModels { TodoViewModelFactory(fileStorage) }
+    private val fileStorage by lazy { FileStorage(applicationContext) }
+    private val networkDataSource by lazy { NetworkDataSource() }
+    private val repository by lazy { TodoItemsRepository(fileStorage, networkDataSource) }
+
+    private val viewModel: TodoViewModel by viewModels { TodoViewModelFactory(repository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         Timber.plant(Timber.DebugTree())
-
         enableEdgeToEdge()
         setContent {
             TodoAppTheme {
@@ -38,6 +45,14 @@ class MainActivity : ComponentActivity() {
 private fun TodoApp(viewModel: TodoViewModel) {
     val navController = rememberNavController()
     val todoItems by viewModel.todoItems.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.errorEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     NavHost(navController = navController, startDestination = AppDestinations.TODO_LIST) {
         composable(AppDestinations.TODO_LIST) {
