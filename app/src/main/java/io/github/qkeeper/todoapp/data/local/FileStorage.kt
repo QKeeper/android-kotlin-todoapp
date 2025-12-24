@@ -1,4 +1,3 @@
-// FileStorage.kt
 package io.github.qkeeper.todoapp.data.local
 
 import android.content.Context

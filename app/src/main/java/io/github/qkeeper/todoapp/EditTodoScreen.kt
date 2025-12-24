@@ -360,12 +360,12 @@ fun ColorSelector(
     onColorChange: (Color) -> Unit
 ) {
     val predefinedColors = listOf(
-        Color(0xFFFFFFFF), // Белый
-        Color(0xFFFF7675), // Красный
-        Color(0xFFFAB1A0), // Оранжевый
-        Color(0xFFFFEAA7), // Желтый
-        Color(0xFF55EFC4), // Зеленый
-        Color(0xFF81ECEC), // Синий
+        Color(0xFFFFFFFF.toInt()), // Белый
+        Color(0xFFFF7675.toInt()), // Красный
+        Color(0xFFFAB1A0.toInt()), // Оранжевый
+        Color(0xFFFFEAA7.toInt()), // Желтый
+        Color(0xFF55EFC4.toInt()), // Зеленый
+        Color(0xFF81ECEC.toInt()), // Синий
     )
 
     Row(

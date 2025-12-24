@@ -18,20 +18,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import io.github.qkeeper.todoapp.data.local.FileStorage
 import io.github.qkeeper.todoapp.data.TodoItemsRepository
 import io.github.qkeeper.todoapp.data.remote.NetworkDataSource
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private val fileStorage by lazy { FileStorage(applicationContext) }
     private val networkDataSource by lazy { NetworkDataSource() }
-    private val repository by lazy { TodoItemsRepository(fileStorage, networkDataSource) }
+
+    private val repository by lazy {
+        TodoItemsRepository(applicationContext, networkDataSource)
+    }
 
     private val viewModel: TodoViewModel by viewModels { TodoViewModelFactory(repository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.plant(Timber.DebugTree())
+
+        lifecycleScope.launch {
+            repository.loadLocalData()
+        }
+
         enableEdgeToEdge()
         setContent {
             TodoAppTheme {
@@ -64,6 +72,9 @@ private fun TodoApp(viewModel: TodoViewModel) {
                 onTodoClick = { todoId ->
                     navController.navigate("${AppDestinations.EDIT_TODO}?${AppDestinations.TODO_ID_ARG}=${todoId}")
                 },
+                onTodoUpdate = { updatedItem ->
+                    viewModel.updateTodo(updatedItem)
+                },
                 onDelete = { todoId ->
                     viewModel.deleteTodoItem(todoId)
                 }
@@ -86,7 +97,11 @@ private fun TodoApp(viewModel: TodoViewModel) {
                 item = todoItem,
                 isNew = todoId == null,
                 onSave = { updatedItem ->
-                    viewModel.addOrUpdate(updatedItem)
+                    if (todoId != null) {
+                        viewModel.updateTodo(updatedItem)
+                    } else {
+                        viewModel.addOrUpdate(updatedItem)
+                    }
                     navController.popBackStack()
                 },
                 onNavigateBack = {

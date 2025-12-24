@@ -57,7 +57,13 @@ class TodoViewModel(
     }
 
     fun getTodoItem(uid: String): TodoItem? {
-        return repository.getItem(uid)
+        return todoItems.value.find { it.uid == uid }
+    }
+
+    fun updateTodo(item: TodoItem) {
+        viewModelScope.launch(exceptionHandler) {
+            repository.updateItem(item)
+        }
     }
 }
 
